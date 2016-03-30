@@ -8,7 +8,7 @@ $channel = $connection->channel();
 $channel->queue_declare('interest-queue', false, false, false, false);
 //$channel->queue_declare('solved-interest-queue', false, false, false, false);
 
-$callback = function ($msg) use ($channel){
+$callback = function ($msg) use ($channel) {
     echo " [x] Received ", $msg->body, "\n";
     $data = json_decode($msg->body, true);
     if (empty($data)) {
@@ -32,8 +32,9 @@ $callback = function ($msg) use ($channel){
     $data['interest'] = $totalInterest;
     $data['totalSum'] = $totalSum;
     $data['token'] = 'kamil';
-    echo json_encode($data) . "\n";
-    $msg = new AMQPMessage(json_encode($data));
+    $string = json_encode($data);
+    echo "Sent: " . $string . "\n";
+    $msg = new AMQPMessage($string, ['content-type' => "application/json"]);
     $channel->basic_publish($msg, '', 'solved-interest-queue');
 };
 $channel->basic_consume('interest-queue', '', false, true, false, false, $callback);
