@@ -4,13 +4,11 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 
 $connection = new AMQPStreamConnection('impact.ccat.eu', 5672, 'myjar', 'myjar');
-$channel = $connection->channel(1);
+$channel = $connection->channel();
 $channel->queue_declare('interest-queue', false, false, false, false);
-$channelSent = $connection->channel(2);
-$channelSent->queue_declare('solved-interest-queue', false, false, false, false);
-$callback = function ($msg)
-//use ($channelSent)
-{
+//$channel->queue_declare('solved-interest-queue', false, false, false, false);
+
+$callback = function ($msg) use ($channel){
     echo " [x] Received ", $msg->body, "\n";
     $data = json_decode($msg->body, true);
     if (empty($data)) {
@@ -35,8 +33,8 @@ $callback = function ($msg)
     $data['totalSum'] = $totalSum;
     $data['token'] = 'kamil';
     echo json_encode($data) . "\n";
-//    $msg = new AMQPMessage(json_encode($data));
-//    $channelSent->basic_publish($msg, '', 'solved-interest-queue');
+    $msg = new AMQPMessage(json_encode($data));
+    $channel->basic_publish($msg, '', 'solved-interest-queue');
 };
 $channel->basic_consume('interest-queue', '', false, true, false, false, $callback);
 while (count($channel->callbacks)) {
