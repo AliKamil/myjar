@@ -14,6 +14,9 @@ $callback = function ($msg) use ($channel) {
     }
     $days = $data['days'];
     $sum = $data['sum'];
+    if (!is_int($days) || $days < 0 || !is_int($sum) || $sum < 0) {
+        return;
+    }
 
     $divisibleByBoth = floor($days / 15);
     $divisibleByThree = floor($days / 3) - $divisibleByBoth;
