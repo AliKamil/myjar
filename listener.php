@@ -18,7 +18,9 @@ $callback = function ($msg) use ($channel) {
     if (!is_int($days) || $days <= 0 || !is_int($sum) || $sum <= 0) {
         return;
     }
-
+    /**
+     * Formula can be shortened, but I left this variant for readability
+     */
     $divisibleByBoth = floor($days / 15);
     $divisibleByThree = floor($days / 3) - $divisibleByBoth;
     $divisibleByFive = floor($days / 5) - $divisibleByBoth;
@@ -38,8 +40,13 @@ $callback = function ($msg) use ($channel) {
     $string = json_encode($data);
     echo "Sent: " . $string . "\n";
     $msg = new AMQPMessage($string, ['content_type' => 'text/json', 'delivery_mode' => 2]);
-    $channel->basic_publish($msg, '', 'solved-interest-queue');
+    try {
+        $channel->basic_publish($msg, '', 'solved-interest-queue');
+    } catch (Throwable $e) {
+        echo $e->getMessage() . "\n";
+    }
 };
+
 $channel->basic_consume('interest-queue', '', false, true, false, false, $callback);
 while (count($channel->callbacks)) {
     $channel->wait();
